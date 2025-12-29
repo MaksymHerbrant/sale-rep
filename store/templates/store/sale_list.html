@@ -1,0 +1,67 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Продажі{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Продажі</h2>
+    <a href="{% url 'sale_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Створити продаж
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="mb-3">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Від</label>
+                    <input type="date" class="form-control" name="date_from" value="{{ date_from }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">До</label>
+                    <input type="date" class="form-control" name="date_to" value="{{ date_to }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-primary w-100" type="submit">Фільтрувати</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Касир</th>
+                        <th>Дата</th>
+                        <th>Сума</th>
+                        <th>Дії</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                        <tr>
+                            <td>#{{ sale.id }}</td>
+                            <td>{{ sale.user.get_full_name|default:sale.user.username }}</td>
+                            <td>{{ sale.created_at|date:"d.m.Y H:i" }}</td>
+                            <td><strong>{{ sale.total_amount }} грн</strong></td>
+                            <td>
+                                <a href="{% url 'sale_detail' sale.id %}" class="btn btn-sm btn-info">
+                                    <i class="bi bi-eye"></i> Деталі
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">Немає продажів</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

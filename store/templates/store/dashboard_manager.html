@@ -1,0 +1,45 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Головна - Керівник{% endblock %}
+
+{% block content %}
+<h2>Панель керівника</h2>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Продажі за сьогодні</h5>
+            </div>
+            <div class="card-body">
+                <h3>{{ sales_today.total|default:0 }} грн</h3>
+                <p class="text-muted">Кількість продажів: {{ sales_today.count|default:0 }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Продажі за тиждень</h5>
+            </div>
+            <div class="card-body">
+                <h3>{{ sales_week.total|default:0 }} грн</h3>
+                <p class="text-muted">Кількість продажів: {{ sales_week.count|default:0 }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body text-center">
+                <a href="{% url 'reports' %}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-graph-up"></i> Перейти до звітів та аналітики
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

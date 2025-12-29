@@ -1,0 +1,248 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Створити продаж{% endblock %}
+
+{% block extra_js %}
+<script>
+let saleItems = [];
+
+function addItem() {
+    const productSelect = document.getElementById('product-select');
+    const quantityInput = document.getElementById('quantity-input');
+    const priceInput = document.getElementById('price-input');
+    
+    const productId = productSelect.value;
+    if (!productId) {
+        alert('Виберіть товар');
+        return;
+    }
+    
+    const option = productSelect.options[productSelect.selectedIndex];
+    const productName = option.text.split(' (')[0]; // Беремо тільки назву без залишку
+    const quantity = parseInt(quantityInput.value);
+    const price = parseFloat(priceInput.value);
+    
+    if (!quantity || quantity <= 0) {
+        alert('Вкажіть кількість');
+        return;
+    }
+    
+    if (!price || price <= 0) {
+        alert('Ціна не встановлена. Виберіть товар.');
+        return;
+    }
+    
+    // Перевірка наявності на складі
+    const stockMatch = option.text.match(/\((\d+)\s*шт\)/);
+    if (stockMatch) {
+        const stock = parseInt(stockMatch[1]);
+        // Перевіряємо, чи не перевищуємо залишок з урахуванням вже доданих товарів
+        const alreadyAdded = saleItems.filter(item => item.product_id === productId)
+            .reduce((sum, item) => sum + item.quantity, 0);
+        const availableStock = stock - alreadyAdded;
+        
+        if (quantity > availableStock) {
+            alert(`Недостатньо товару на складі. Доступно: ${availableStock} шт.`);
+            return;
+        }
+    }
+    
+    const subtotal = quantity * price;
+    saleItems.push({
+        product_id: productId,
+        product_name: productName,
+        quantity: quantity,
+        price: price,
+        subtotal: subtotal
+    });
+    
+    updateItemsTable();
+    productSelect.value = '';
+    quantityInput.value = '';
+    priceInput.value = '';
+}
+
+function removeItem(index) {
+    saleItems.splice(index, 1);
+    updateItemsTable();
+}
+
+function updateItemsTable() {
+    const tbody = document.getElementById('items-tbody');
+    tbody.innerHTML = '';
+    
+    let total = 0;
+    saleItems.forEach((item, index) => {
+        total += item.subtotal;
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td>${item.product_name}</td>
+            <td>${item.quantity}</td>
+            <td>${item.price.toFixed(2)} грн</td>
+            <td>${item.subtotal.toFixed(2)} грн</td>
+            <td>
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeItem(${index})">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        `;
+    });
+    
+    document.getElementById('total-amount').textContent = total.toFixed(2);
+}
+
+function submitSale() {
+    if (saleItems.length === 0) {
+        alert('Додайте хоча б один товар');
+        return;
+    }
+    
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "sale_create" %}';
+    
+    const csrf = document.createElement('input');
+    csrf.type = 'hidden';
+    csrf.name = 'csrfmiddlewaretoken';
+    csrf.value = '{{ csrf_token }}';
+    form.appendChild(csrf);
+    
+    const itemsInput = document.createElement('input');
+    itemsInput.type = 'hidden';
+    itemsInput.name = 'items';
+    itemsInput.value = JSON.stringify(saleItems);
+    form.appendChild(itemsInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Завантаження ціни та перевірка залишку при виборі товару
+document.getElementById('product-select').addEventListener('change', function() {
+    const productId = this.value;
+    const priceInput = document.getElementById('price-input');
+    const quantityInput = document.getElementById('quantity-input');
+    
+    if (productId) {
+        const option = this.options[this.selectedIndex];
+        const price = option.getAttribute('data-price');
+        
+        if (price) {
+            // Встановлюємо ціну автоматично
+            priceInput.value = parseFloat(price).toFixed(2);
+        }
+        
+        // Отримуємо залишок з тексту опції (формат: "Назва (123 шт)")
+        const optionText = option.text;
+        const stockMatch = optionText.match(/\((\d+)\s*шт\)/);
+        if (stockMatch) {
+            const stock = parseInt(stockMatch[1]);
+            // Встановлюємо максимальну кількість
+            quantityInput.setAttribute('max', stock);
+            if (parseInt(quantityInput.value) > stock) {
+                quantityInput.value = stock;
+            }
+        }
+    } else {
+        // Якщо товар не вибрано, очищаємо поля
+        priceInput.value = '';
+        quantityInput.value = '1';
+        quantityInput.removeAttribute('max');
+    }
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Додати товар</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-5">
+                        <label class="form-label">Товар</label>
+                        <select id="product-select" class="form-select">
+                            <option value="">Виберіть товар</option>
+                            {% for product in products %}
+                                <option value="{{ product.id }}" data-price="{{ product.price }}">
+                                    {{ product.name }} ({{ product.current_stock }} шт)
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Кількість</label>
+                        <input type="number" id="quantity-input" class="form-control" min="1" value="1">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Ціна</label>
+                        <input type="number" id="price-input" class="form-control" step="0.01" min="0.01" readonly>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="button" class="btn btn-primary w-100" onclick="addItem()">
+                            <i class="bi bi-plus"></i> Додати
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h4>Позиції продажу</h4>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Товар</th>
+                            <th>Кількість</th>
+                            <th>Ціна</th>
+                            <th>Підсумок</th>
+                            <th>Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody id="items-tbody">
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="3">Всього:</th>
+                            <th id="total-amount">0.00</th>
+                            <th>грн</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5>Загальна сума</h5>
+                <h2 id="total-display">0.00 грн</h2>
+                <hr>
+                <button type="button" class="btn btn-success btn-lg w-100" onclick="submitSale()">
+                    <i class="bi bi-check-circle"></i> Створити продаж
+                </button>
+                <a href="{% url 'sale_list' %}" class="btn btn-secondary w-100 mt-2">
+                    Скасувати
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Оновлення загальної суми
+setInterval(() => {
+    const total = saleItems.reduce((sum, item) => sum + item.subtotal, 0);
+    document.getElementById('total-display').textContent = total.toFixed(2) + ' грн';
+}, 100);
+</script>
+{% endblock %}
+

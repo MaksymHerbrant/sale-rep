@@ -1,0 +1,73 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Головна - Адміністратор{% endblock %}
+
+{% block content %}
+<h2>Панель адміністратора</h2>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h1 class="display-4">{{ products_count }}</h1>
+                <p class="card-text">Товарів</p>
+                <a href="{% url 'product_list' %}" class="btn btn-primary">Переглянути</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h1 class="display-4">{{ categories_count }}</h1>
+                <p class="card-text">Категорій</p>
+                <a href="{% url 'category_list' %}" class="btn btn-primary">Переглянути</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h1 class="display-4">{{ low_stock_products|length }}</h1>
+                <p class="card-text">Товарів з низьким залишком</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if low_stock_products %}
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Товари з низьким залишком (< 10)</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Товар</th>
+                            <th>Залишок</th>
+                            <th>Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in low_stock_products %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td><span class="badge bg-warning">{{ item.stock }}</span></td>
+                                <td>
+                                    <a href="{% url 'stock_create' %}?product={{ item.product.id }}" class="btn btn-sm btn-primary">
+                                        Поповнити
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+

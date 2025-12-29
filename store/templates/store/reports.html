@@ -1,0 +1,315 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Звіти та аналітика{% endblock %}
+
+{% block extra_js %}
+<script>
+let revenueChart = null;
+let categoryChart = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Завантажуємо аналітику при завантаженні сторінки
+    loadAnalytics();
+    
+    // Дозволяємо формі відправлятися нормально - вона перезавантажить сторінку з новими параметрами
+    // Графіки оновляться автоматично після перезавантаження
+});
+
+function loadAnalytics() {
+    const dateFrom = document.getElementById('date_from').value;
+    const dateTo = document.getElementById('date_to').value;
+    
+    // Перевірка, чи дати заповнені
+    if (!dateFrom || !dateTo) {
+        console.warn('Дати не вказані, використовуються значення за замовчуванням');
+    }
+    
+    console.log('Завантаження аналітики для періоду:', dateFrom, 'до', dateTo);
+    
+    fetch(`{% url 'analytics_data' %}?date_from=${dateFrom}&date_to=${dateTo}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Отримано дані аналітики:', data);
+            console.log('Кількість днів у графіку:', data.sales_by_date.length);
+            drawRevenueChart(data.sales_by_date);
+            drawCategoryChart(data.category_sales);
+        })
+        .catch(error => {
+            console.error('Помилка завантаження аналітики:', error);
+        });
+}
+
+function drawRevenueChart(data) {
+    const ctx = document.getElementById('revenueChart');
+    
+    // Видаляємо попередній графік, якщо він існує
+    if (revenueChart) {
+        revenueChart.destroy();
+    }
+    
+    // Перевірка наявності даних
+    if (!data || data.length === 0) {
+        ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+        return;
+    }
+    
+    // Форматування дат для відображення
+    const labels = data.map(item => {
+        const date = new Date(item.day);
+        return date.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' });
+    });
+    
+    const chartData = data.map(item => parseFloat(item.total || 0));
+    
+    revenueChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Виручка (грн)',
+                data: chartData,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('uk-UA') + ' грн';
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Виручка: ' + context.parsed.y.toLocaleString('uk-UA') + ' грн';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function drawCategoryChart(data) {
+    const ctx = document.getElementById('categoryChart');
+    
+    // Видаляємо попередній графік, якщо він існує
+    if (categoryChart) {
+        categoryChart.destroy();
+    }
+    
+    // Перевірка наявності даних
+    if (!data || data.length === 0) {
+        ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+        return;
+    }
+    
+    const labels = data.map(item => item.product__category__name || 'Без категорії');
+    const chartData = data.map(item => parseFloat(item.total || 0));
+    
+    // Генерація кольорів для категорій
+    const colors = [
+        'rgba(255, 99, 132, 0.8)',
+        'rgba(54, 162, 235, 0.8)',
+        'rgba(255, 206, 86, 0.8)',
+        'rgba(75, 192, 192, 0.8)',
+        'rgba(153, 102, 255, 0.8)',
+        'rgba(255, 159, 64, 0.8)',
+        'rgba(199, 199, 199, 0.8)',
+        'rgba(83, 102, 255, 0.8)',
+    ];
+    
+    categoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: chartData,
+                backgroundColor: colors.slice(0, labels.length)
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return label + ': ' + value.toLocaleString('uk-UA') + ' грн (' + percentage + '%)';
+                        }
+                    }
+                },
+                legend: {
+                    position: 'right'
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<h2>Звіти та аналітика</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form id="filter-form" method="get" action="{% url 'reports' %}">
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Від</label>
+                    <input type="date" id="date_from" name="date_from" class="form-control" value="{{ date_from }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">До</label>
+                    <input type="date" id="date_to" name="date_to" class="form-control" value="{{ date_to }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">Застосувати</button>
+                    <a href="{% url 'sales_report_pdf' %}?start={{ date_from }}&end={{ date_to }}" class="btn btn-success w-100 mt-2" target="_blank">
+                        <i class="bi bi-file-pdf"></i> Завантажити звіт (PDF)
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3>{{ total_revenue }} грн</h3>
+                <p class="text-muted">Загальна виручка</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3>{{ total_count }}</h3>
+                <p class="text-muted">Кількість продажів</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h3>{{ average_check|floatformat:2 }} грн</h3>
+                <p class="text-muted">Середній чек</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Виручка по днях</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Частка категорій у продажах</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Топ товарів за виручкою</h5>
+                <small class="text-muted">Період: {{ date_from }} - {{ date_to }}</small>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Товар</th>
+                            <th>Кількість</th>
+                            <th>Сума</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in top_products %}
+                            <tr>
+                                <td>{{ item.product__name }}</td>
+                                <td>{{ item.total_quantity }}</td>
+                                <td>{{ item.total_amount|floatformat:2 }} грн</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">Немає даних за вибраний період</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Залишки на складі</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Товар</th>
+                            <th>Залишок</th>
+                            <th>Вартість</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in stock_products|slice:":10" %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.stock }}</td>
+                                <td>{{ item.value|floatformat:2 }} грн</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">Немає даних</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,65 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Користувачі{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Користувачі</h2>
+    <a href="{% url 'user_create' %}" class="btn btn-primary">
+        <i class="bi bi-person-plus"></i> Додати користувача
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Логін</th>
+                        <th>Ім'я</th>
+                        <th>Email</th>
+                        <th>Групи</th>
+                        <th>Статус</th>
+                        <th>Дії</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user_obj in users %}
+                        <tr>
+                            <td>{{ user_obj.username }}</td>
+                            <td>{{ user_obj.get_full_name|default:"—" }}</td>
+                            <td>{{ user_obj.email|default:"—" }}</td>
+                            <td>
+                                {% for group in user_obj.groups.all %}
+                                    <span class="badge bg-info">{{ group.name }}</span>
+                                {% empty %}
+                                    <span class="text-muted">Немає груп</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if user_obj.is_staff %}
+                                    <span class="badge bg-success">Staff</span>
+                                {% endif %}
+                                {% if user_obj.is_superuser %}
+                                    <span class="badge bg-danger">Superuser</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'user_edit' user_obj.id %}" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i> Редагувати
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">Немає користувачів</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

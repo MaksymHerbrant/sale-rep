@@ -1,0 +1,88 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Товари{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Товари</h2>
+    <a href="{% url 'product_create' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Створити товар
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="mb-3">
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" name="search" value="{{ search }}" placeholder="Пошук...">
+                </div>
+                <div class="col-md-4">
+                    <select name="category" class="form-select">
+                        <option value="">Всі категорії</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if category_id == cat.id|stringformat:"s" %}selected{% endif %}>
+                                {{ cat.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary w-100" type="submit">Фільтрувати</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Назва</th>
+                        <th>Категорія</th>
+                        <th>Ціна</th>
+                        <th>Штрихкод</th>
+                        <th>Залишок</th>
+                        <th>Статус</th>
+                        <th>Дії</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.category.name }}</td>
+                            <td>{{ product.price }} грн</td>
+                            <td>{{ product.barcode|default:"—" }}</td>
+                            <td>
+                                <span class="badge {% if product.current_stock < 10 %}bg-warning{% else %}bg-success{% endif %}">
+                                    {{ product.current_stock }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if product.is_active %}
+                                    <span class="badge bg-success">Активний</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Неактивний</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'product_edit' product.id %}" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'product_delete' product.id %}" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">Немає товарів</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

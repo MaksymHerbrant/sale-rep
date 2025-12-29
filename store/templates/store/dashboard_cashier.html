@@ -1,0 +1,54 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Головна - Касир{% endblock %}
+
+{% block content %}
+<h2>Доброго дня, {{ user.get_full_name|default:user.username }}!</h2>
+<p class="text-muted">Ваша роль: Касир</p>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5>Продажі за сьогодні</h5>
+                <a href="{% url 'sale_create' %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-circle"></i> Створити продаж
+                </a>
+            </div>
+            <div class="card-body">
+                {% if sales_today %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Дата</th>
+                                    <th>Сума</th>
+                                    <th>Дії</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sale in sales_today %}
+                                    <tr>
+                                        <td>#{{ sale.id }}</td>
+                                        <td>{{ sale.created_at|date:"d.m.Y H:i" }}</td>
+                                        <td>{{ sale.total_amount }} грн</td>
+                                        <td>
+                                            <a href="{% url 'sale_detail' sale.id %}" class="btn btn-sm btn-info">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Поки що немає продажів за сьогодні</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

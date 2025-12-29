@@ -1,0 +1,26 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Видалити категорію{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4>Видалити категорію</h4>
+            </div>
+            <div class="card-body">
+                <p>Ви впевнені, що хочете видалити категорію <strong>{{ category.name }}</strong>?</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'category_list' %}" class="btn btn-secondary">Скасувати</a>
+                        <button type="submit" class="btn btn-danger">Видалити</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

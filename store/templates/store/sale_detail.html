@@ -1,0 +1,52 @@
+{% extends 'store/base.html' %}
+
+{% block title %}Деталі продажу #{{ sale.id }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Продаж #{{ sale.id }}</h4>
+            </div>
+            <div class="card-body">
+                <p><strong>Касир:</strong> {{ sale.user.get_full_name|default:sale.user.username }}</p>
+                <p><strong>Дата:</strong> {{ sale.created_at|date:"d.m.Y H:i" }}</p>
+                <p><strong>Загальна сума:</strong> <span class="h4">{{ sale.total_amount }} грн</span></p>
+                
+                <hr>
+                
+                <h5>Позиції:</h5>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Товар</th>
+                            <th>Кількість</th>
+                            <th>Ціна</th>
+                            <th>Підсумок</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>{{ item.price }} грн</td>
+                                <td>{{ item.subtotal }} грн</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="{% url 'sale_list' %}" class="btn btn-secondary">Назад до списку</a>
+    <a href="{% url 'sale_receipt_pdf' sale.id %}" class="btn btn-primary" target="_blank">
+        <i class="bi bi-file-pdf"></i> Завантажити чек (PDF)
+    </a>
+</div>
+{% endblock %}
+
