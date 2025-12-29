@@ -1,4 +1,5 @@
 Django>=6.0,<7.0
 WeasyPrint>=62.0
 matplotlib>=3.8.0
+gunicorn==21.2.0
 
