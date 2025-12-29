@@ -28,7 +28,7 @@ if os.path.exists('/opt/homebrew/lib'):
 SECRET_KEY = 'django-insecure-apnj$hgfykn&5_v-1p6simaz%-vi5^b--p20e#vwbx@)r$0csz'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
