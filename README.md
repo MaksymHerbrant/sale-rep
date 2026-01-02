@@ -35,6 +35,8 @@
 
 ## Встановлення
 
+### Локальна розробка:
+
 1. Клонуйте репозиторій або розпакуйте архів
 
 2. Створіть віртуальне середовище:
@@ -45,10 +47,10 @@ source venv/bin/activate  # На Windows: venv\Scripts\activate
 
 3. Встановіть залежності:
 ```bash
-pip install django
+pip install -r requirements.txt
 ```
 
-4. Скомпілюйте C++ модуль:
+4. **Скомпілюйте C++ модуль** (обов'язково!):
 ```bash
 cd cpp_analytics
 make
@@ -72,6 +74,33 @@ python manage.py runserver
 ```
 
 8. Відкрийте браузер: http://127.0.0.1:8000
+
+### Деплой на сервер:
+
+**⚠️ Важливо:** C++ модуль **НЕ запускається автоматично** - він викликається через `subprocess.run()` коли потрібно. Але **потрібно скомпілювати** його на сервері!
+
+**Швидкий деплой:**
+```bash
+./deploy.sh
+```
+
+**Або вручну:**
+```bash
+# 1. Компіляція C++ модуля
+cd cpp_analytics && make && cd ..
+
+# 2. Встановлення залежностей
+pip install -r requirements.txt
+
+# 3. Міграції
+python manage.py migrate
+
+# 4. Запуск сервера
+python manage.py runserver
+# або для production: gunicorn inventory_system.wsgi:application
+```
+
+**Детальні інструкції:** див. `DEPLOY.md`
 
 ## Дані для входу (після seed_data)
 

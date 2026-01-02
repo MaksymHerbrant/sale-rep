@@ -126,6 +126,22 @@
                 <div class="stat-label">Середній чек</div>
             </div>
         </div>
+        {% if cpp_stats %}
+        <div class="stats" style="margin-top: 15px;">
+            <div class="stat-item">
+                <div class="stat-value">{{ cpp_stats.median|floatformat:2 }} грн</div>
+                <div class="stat-label">Медіана</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ cpp_stats.std_dev|floatformat:2 }} грн</div>
+                <div class="stat-label">Стандартне відхилення</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ cpp_stats.min|floatformat:2 }} - {{ cpp_stats.max|floatformat:2 }} грн</div>
+                <div class="stat-label">Мін - Макс</div>
+            </div>
+        </div>
+        {% endif %}
     </div>
     
     <!-- Графік виручки -->
@@ -152,9 +168,9 @@
                 {% for item in top_by_amount %}
                 <tr>
                     <td class="text-center">{{ forloop.counter }}</td>
-                    <td>{{ item.product__name }}</td>
-                    <td class="text-right">{{ item.total_quantity }}</td>
-                    <td class="text-right">{{ item.total_amount|floatformat:2 }} грн</td>
+                    <td>{% if item.product__name %}{{ item.product__name }}{% else %}{{ item.product_name }}{% endif %}</td>
+                    <td class="text-right">{{ item.total_quantity|default:0 }}</td>
+                    <td class="text-right">{% if item.total_amount %}{{ item.total_amount|floatformat:2 }}{% else %}{{ item.revenue|floatformat:2 }}{% endif %} грн</td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -181,9 +197,17 @@
                 {% for item in top_by_quantity %}
                 <tr>
                     <td class="text-center">{{ forloop.counter }}</td>
-                    <td>{{ item.product__name }}</td>
-                    <td class="text-right">{{ item.total_quantity }}</td>
-                    <td class="text-right">{{ item.total_amount|floatformat:2 }} грн</td>
+                    <td>{{ item.product_name|default:item.product__name|default:"—" }}</td>
+                    <td class="text-right">{{ item.total_quantity|default:item.quantity|default:0 }}</td>
+                    <td class="text-right">
+                        {% if item.total_amount %}
+                            {{ item.total_amount|floatformat:2 }} грн
+                        {% elif item.total_amount == 0 and item.quantity %}
+                            —
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
@@ -193,6 +217,71 @@
             </tbody>
         </table>
     </div>
+    
+    <!-- ABC-аналіз -->
+    {% if abc_analysis %}
+    <div class="section">
+        <div class="section-title">ABC-аналіз товарів</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Товар</th>
+                    <th class="text-right">Виручка</th>
+                    <th class="text-right">Кумулятивний %</th>
+                    <th class="text-center">Категорія</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in abc_analysis|slice:":20" %}
+                <tr>
+                    <td class="text-center">{{ forloop.counter }}</td>
+                    <td>{{ item.product_name }}</td>
+                    <td class="text-right">{{ item.revenue|floatformat:2 }} грн</td>
+                    <td class="text-right">{{ item.cumulative_percent|floatformat:2 }}%</td>
+                    <td class="text-center">
+                        {% if item.category == 'A' %}
+                            <span style="color: #28a745; font-weight: bold;">A</span>
+                        {% elif item.category == 'B' %}
+                            <span style="color: #ffc107; font-weight: bold;">B</span>
+                        {% else %}
+                            <span style="color: #dc3545; font-weight: bold;">C</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p style="font-size: 9pt; margin-top: 10px; color: #666;">
+            <strong>Легенда:</strong> A - 0-80% виручки (ключові товари), B - 80-95% (важливі), C - 95-100% (допоміжні)
+        </p>
+    </div>
+    {% endif %}
+    
+    <!-- Частки по категоріях -->
+    {% if category_shares %}
+    <div class="section">
+        <div class="section-title">Частки продажів по категоріях</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Категорія</th>
+                    <th class="text-right">Частка</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in category_shares %}
+                <tr>
+                    <td class="text-center">{{ forloop.counter }}</td>
+                    <td>{{ item.category }}</td>
+                    <td class="text-right">{{ item.share|floatformat:2 }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
     
     <!-- Залишки на складі -->
     <div class="section">

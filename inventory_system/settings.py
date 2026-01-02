@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-     'store.apps.StoreConfig',
+    'store.apps.StoreConfig',  # Використовуємо кастомний AppConfig для auto-seed
 ]
 
 MIDDLEWARE = [
