@@ -28,9 +28,9 @@ if os.path.exists('/opt/homebrew/lib'):
 SECRET_KEY = 'django-insecure-apnj$hgfykn&5_v-1p6simaz%-vi5^b--p20e#vwbx@)r$0csz'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ["sale-rep.onrender.com", "localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["sale-rep.onrender.com", "localhost", "127.0.0.1","192.168.64.1"]
 CSRF_TRUSTED_ORIGINS = ["https://sale-rep.onrender.com"]
 
 

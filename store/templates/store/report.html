@@ -145,12 +145,14 @@
     </div>
     
     <!-- Графік виручки -->
+    {% if chart_image %}
     <div class="section">
         <div class="section-title">Графік виручки по днях</div>
         <div class="chart-container">
             <img src="data:image/png;base64,{{ chart_image }}" alt="Графік виручки">
         </div>
     </div>
+    {% endif %}
     
     <!-- Топ товарів за сумою -->
     <div class="section">

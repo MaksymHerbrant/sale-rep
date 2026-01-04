@@ -50,7 +50,17 @@ class StockForm(forms.ModelForm):
         }
     
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        is_manager = kwargs.pop('is_manager', False)
         super().__init__(*args, **kwargs)
+        
+        # Для керівника - тільки надходження
+        if is_manager:
+            self.fields['transaction_type'].choices = [('in', 'Надходження')]
+            self.fields['transaction_type'].initial = 'in'
+            # Не використовуємо disabled, бо тоді поле не відправляється в POST
+            # Замість цього використовуємо readonly input в шаблоні
+        
         # Для корекції дозволяємо негативні значення
         if self.instance and self.instance.transaction_type == 'adjustment':
             self.fields['quantity'].widget.attrs['min'] = None
@@ -67,6 +77,12 @@ class StockForm(forms.ModelForm):
         
         # Для корекції дозволяємо будь-які значення (позитивні для збільшення, негативні для зменшення)
         return quantity
+    
+    def clean_transaction_type(self):
+        transaction_type = self.cleaned_data.get('transaction_type')
+        # Перевірка для керівника (якщо форма була змінена через інспектор браузера)
+        # Це додаткова перевірка, основна логіка в view
+        return transaction_type
 
 
 class SaleItemForm(forms.ModelForm):

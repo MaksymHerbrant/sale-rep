@@ -48,7 +48,8 @@ class Command(BaseCommand):
                 email='manager1@example.com',
                 password='manager123',
                 first_name='Петро',
-                last_name='Керівник'
+                last_name='Керівник',
+                is_staff=True  # Керівник має доступ до Django admin
             )
             manager1.groups.add(manager_group)
             self.stdout.write(self.style.SUCCESS(f'Створено користувача: {manager1.username}'))

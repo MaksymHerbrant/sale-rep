@@ -5,9 +5,16 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Складські операції</h2>
+    {% if can_edit %}
     <a href="{% url 'stock_create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Створити операцію
+        <i class="bi bi-plus-circle"></i> 
+        {% if is_manager %}
+            Створити надходження
+        {% else %}
+            Створити операцію
+        {% endif %}
     </a>
+    {% endif %}
 </div>
 
 <div class="card">

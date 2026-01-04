@@ -31,7 +31,13 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">{{ form.transaction_type.label }}</label>
-                        {{ form.transaction_type }}
+                        {% if is_manager %}
+                            <input type="text" class="form-control" value="Надходження" readonly>
+                            <input type="hidden" name="transaction_type" value="in">
+                            <small class="form-text text-muted">Керівник може створювати тільки надходження на склад</small>
+                        {% else %}
+                            {{ form.transaction_type }}
+                        {% endif %}
                         {% if form.transaction_type.errors %}
                             <div class="text-danger">{{ form.transaction_type.errors }}</div>
                         {% endif %}
